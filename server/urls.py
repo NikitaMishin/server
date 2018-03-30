@@ -15,7 +15,25 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from rest_framework import routers
+from chat.views import RoomViewSet, UserViewSet
+from django.conf.urls import url, include
+
+from chat import urls
+from chat import views
+
+router = routers.DefaultRouter()
+router.register(r'users', UserViewSet)
+router.register(r'rooms', RoomViewSet)
+# mysite/urls.py
+from django.conf.urls import include, url
+from django.contrib import admin
+
 
 urlpatterns = [
+    url(r'^chat/', include('chat.urls')),
+    #url(r'^w1.0/room/(?P<label>[\w-]{0,100})/$', views.chat_room),  # ok reaally need ?
+    url(r'^w1.0/', include(router.urls)),
+    # url(r'^w1.0/room/',include(urls)),
     path('admin/', admin.site.urls),
 ]
