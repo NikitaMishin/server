@@ -7,12 +7,28 @@ MAX_MESSAGE_LENGTH = 500
 MAX_ROOM_NAME_LENGTH = 255
 
 
+class RoomCategory(models.Model):
+    name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH, default='unsubs', unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Room(models.Model):
     name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH)
     label = models.SlugField(unique=True)
+    category = models.ForeignKey(RoomCategory, on_delete=False, related_name='rooms', null=True)
 
     def __str__(self):
         return self.label
+
+    @property
+    def group_name(self):
+            """
+            Returns the Channels Group name that sockets should subscribe to to get sent
+            messages as they are generated.
+            """
+            return "room-%s" % self.label
 
 
 class Message(models.Model):

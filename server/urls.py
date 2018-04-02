@@ -13,27 +13,46 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path
 from rest_framework import routers
-from chat.views import RoomViewSet, UserViewSet
+from chat.views import RoomViewSet, UserViewSet, RoomCategoryViewSet
 from django.conf.urls import url, include
 
 from chat import urls
 from chat import views
 
+# TODO api for users
+# that u can see who in chat room
+
+
+
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'rooms', RoomViewSet)
-# mysite/urls.py
+router.register(r'category', RoomCategoryViewSet)
+
 from django.conf.urls import include, url
 from django.contrib import admin
 
+from rest_framework_jwt.views import obtain_jwt_token
+from rest_framework_jwt.views import refresh_jwt_token
+from rest_framework_jwt.views import verify_jwt_token
+
+
+def Todo():
+    pass
+
 
 urlpatterns = [
-    url(r'^chat/', include('chat.urls')),
-    #url(r'^w1.0/room/(?P<label>[\w-]{0,100})/$', views.chat_room),  # ok reaally need ?
+    url(r'^ws/chat/', include('chat.urls')),
     url(r'^w1.0/', include(router.urls)),
-    # url(r'^w1.0/room/',include(urls)),
+    url(r'^auth-jwt/', obtain_jwt_token),
+    url(r'^auth-jwt-refresh/', refresh_jwt_token),
+    url(r'^auth-jwt-verify', verify_jwt_token),
+    url(r'^auth-social-verify/', Todo),
+
     path('admin/', admin.site.urls),
+
 ]
