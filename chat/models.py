@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils import timezone
 
 from django.contrib.auth.models import User
@@ -9,25 +10,41 @@ MAX_ROOM_NAME_LENGTH = 255
 
 class RoomCategory(models.Model):
     name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH, default='unsubs', unique=True)
+    description = models.CharField(max_length=MAX_MESSAGE_LENGTH)
 
     def __str__(self):
         return self.name
 
 
+# this could be open channels
 class Room(models.Model):
     name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH)
     label = models.SlugField(unique=True)
-    category = models.ForeignKey(RoomCategory, on_delete=False, related_name='rooms', null=True)
+    #   category = models.ForeignKey(RoomCategory, on_delete=False, related_name='rooms', null=True)
+    # users = models.ManyToManyField(
+
+    # )  # our custom person
+    expiry = models.DateTimeField(blank=False)  # for 1-1 chat forever
+    #    size = models.IntegerField(null=False)
+
+    #    challenges = models.ManyToManyField(
+
+    #    )
+    is_open_channel = models.BooleanField()
+    is_finished = models.BooleanField(default=False)
 
     def __str__(self):
         return self.label
 
     @property
     def group_name(self):
-            """
-            Returns the Channels Group name that sockets should subscribe to to get sent
-            messages as they are generated.
-            """
+        """
+        Returns the Channels Group name that sockets should subscribe to to get sent
+        messages as they are generated.
+        """
+        if self.size == 2:
+            return "chat-%" % users
+        else:
             return "room-%s" % self.label
 
 
@@ -36,14 +53,127 @@ class Message(models.Model):
     message = models.TextField(max_length=MAX_MESSAGE_LENGTH)
     user = models.ForeignKey(User, on_delete=False)  # insert out custom user
     created = models.DateTimeField(default=timezone.now)  # ,db_index=True - for optimization?
+    is_read = models.BooleanField(default=False)
 
     def __str__(self):
-        return str(self.id) + str(self.user.username)
+        return self.message
 
 
-class customUser(User):
-    pass
-    # last_qeolocation
-    # last_update
-    # rating
-    # achievements = models.ManyToManyField()
+class ExpiredRoom(models.Model):
+    size = models.PositiveIntegerField(blank=False)
+    # challenges = models.ManyToManyField()
+    # users = models.ManyToManyField()
+    name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH)
+    label = models.SlugField(unique=True)
+    # category = models.ForeignKey(RoomCategory,on_delete=False,related_name=closerooms) ???? 2
+    is_finished = models.BooleanField(default=False)
+    """
+    Пользователья заходит в приложение.входит
+    Клиент получает от сервера список всех текуших закрытых комнат, в которых он сейчас играет
+    по веб сокету он ко всем подключается которые еще не окончены
+    которые окончены- можно в истории глянуть
+    
+    
+    """
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+def upload_to(instance, filename):
+    return 'user_profile_image/{}/{}'.format(instance.user_id, filename)
+
+
+RELATIONSHIP_STOP_FOLLOW = 0
+RELATIONSHIP_FOLLOWING = 1
+RELATIONSHIP_BLOCKED = 2
+RELATIONSHIP_STATUS = (
+    (RELATIONSHIP_FOLLOWING, 'Following'),
+    (RELATIONSHIP_BLOCKED, 'Blocked')
+)
+
+GENDER_UNKNOWN = 'U'
+GENDER_MALE = 'M'
+GENDER_FEMALE = 'F'
+GENDER_CHOICES = (
+    (GENDER_UNKNOWN, 'unknown'),
+    (GENDER_MALE, 'male'),
+    (GENDER_FEMALE, 'female'),
+)
+
+
+##TODO addlocation
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    relationship = models.ManyToManyField('self', through='Relationship',
+                                          symmetrical=False,
+                                          related_name='related_to')
+    birth_date = models.DateField(blank=True, null=True)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default=GENDER_UNKNOWN)
+    bio = models.TextField(blank=True, max_length=1000)
+    image = models.ImageField(blank=True, null=True, upload_to=upload_to)  ## TODO
+    # completed_challenges = models.ManyToManyFields(Challenge,thr_)
+    global_rating = models.IntegerField(default=0)
+    # active_rooms = models.ManyToManyField()
+    personal_rating = models.IntegerField()
+
+    def get_relationships(self, status):
+        return self.relationship.filter(
+            to_people__status=status,
+            to_people__from_person=self
+        )
+
+    def get_related_to(self, status):
+        return self.related_to.filter(
+            from_people__status=status,
+            from_people__to_person=self
+        )
+
+    def get_following(self):
+        return self.get_relationships(RELATIONSHIP_FOLLOWING)
+
+    def get_followers(self):
+        return self.get_related_to(RELATIONSHIP_FOLLOWING)
+
+    def get_friends(self):
+        return self.relationship.filter(
+            to_people__status=RELATIONSHIP_FOLLOWING,
+            to_people__from_person=self,
+            from_people__status=RELATIONSHIP_FOLLOWING,
+            from_people__to_person=self,
+        )
+
+    def __str__(self):
+        return self.user.username
+
+
+class Relationship(models.Model):
+    from_person = models.ForeignKey(UserProfile, related_name='from_people', on_delete=False)
+    to_person = models.ForeignKey(UserProfile, related_name='to_people', on_delete=False)
+    status = models.IntegerField(choices=RELATIONSHIP_STATUS)
+
+    def add_relationship(self, person, status):
+        relationship, created = Relationship.objects.get_or_create(
+            from_person=self,
+            to_person=person,
+            status=status
+        )
+        return relationship
+
+    def remove_relationship(self, person, status):
+        Relationship.objects.filter(from_person=self, to_person=person, status=status).delete()
+
+    def __str__(self):
+        return 'from ' + self.from_person.user.username + ' to ' + self.to_person.user.username
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.userprofile.save()

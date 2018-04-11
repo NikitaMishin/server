@@ -157,3 +157,6 @@ REST_FRAMEWORK = {
     # it can be refreshed.  exprired tokens can't be refreshed.
 #    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
 #}
+
+MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+MEDIA_URL = '/media/'
