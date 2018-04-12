@@ -4,11 +4,11 @@ from __future__ import unicode_literals
 from django.contrib import admin
 
 
-from .models import Person, CategoryChallenge, PlotChallenge, Challenge
+from .models import CategoryChallenge, PlotChallenge, Challenge
 
 # Register your models here.
 
-admin.site.register(Person)
+#admin.site.register(Person)
 
 admin.site.register(CategoryChallenge)
 

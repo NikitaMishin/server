@@ -43,23 +43,24 @@ from rest_framework_jwt.views import refresh_jwt_token
 from rest_framework_jwt.views import verify_jwt_token
 
 from  django.conf.urls.static import static
-from django.conf import  settings
+from django.conf import settings
+
 
 def Todo():
     pass
 
 
 urlpatterns = [
-    #chat
-    url(r'^ws/chat/', include('chat.urls')),
-    url(r'^w1.0/', include(router.urls)),
-    #auth
-    url(r'^auth-jwt/', obtain_jwt_token),
-    url(r'^auth-jwt-refresh/', refresh_jwt_token),
-    url(r'^auth-jwt-verify', verify_jwt_token),
-    url(r'^auth-social-verify/', Todo),
-    url(r'^w1.0/get_following/',get_followers_info),
-    #url(r'^w1.0/relationship/(?P<action>[0-2]{1})/(?P<id>[0-9]+)',relationship_action),
-    path('admin/', admin.site.urls),
+                  # chat
+                  url(r'^ws/chat/', include('chat.urls')),
+                  url(r'^w1.0/', include(router.urls)),
+                  # auth
+                  url(r'^auth-jwt/', obtain_jwt_token),
+                  url(r'^auth-jwt-refresh/', refresh_jwt_token),
+                  url(r'^auth-jwt-verify', verify_jwt_token),
+                  url(r'^auth-social-verify/', Todo),
+                  url(r'^w1.0/get_following/', get_followers_info),
+                  # url(r'^w1.0/relationship/(?P<action>[0-2]{1})/(?P<id>[0-9]+)',relationship_action),
+                  path('admin/', admin.site.urls),
 
-]+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

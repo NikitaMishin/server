@@ -3,95 +3,12 @@ from django.utils import timezone
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from  database.models import Challenge
 
 MAX_MESSAGE_LENGTH = 500
 MAX_ROOM_NAME_LENGTH = 255
-
-
-class RoomCategory(models.Model):
-    name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH, default='unsubs', unique=True)
-    description = models.CharField(max_length=MAX_MESSAGE_LENGTH)
-
-    def __str__(self):
-        return self.name
-
-
-# this could be open channels
-class Room(models.Model):
-    name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH)
-    label = models.SlugField(unique=True)
-    #   category = models.ForeignKey(RoomCategory, on_delete=False, related_name='rooms', null=True)
-    # users = models.ManyToManyField(
-
-    # )  # our custom person
-    expiry = models.DateTimeField(blank=False)  # for 1-1 chat forever
-    #    size = models.IntegerField(null=False)
-
-    #    challenges = models.ManyToManyField(
-
-    #    )
-    is_open_channel = models.BooleanField()
-    is_finished = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.label
-
-    @property
-    def group_name(self):
-        """
-        Returns the Channels Group name that sockets should subscribe to to get sent
-        messages as they are generated.
-        """
-        if self.size == 2:
-            return "chat-%" % users
-        else:
-            return "room-%s" % self.label
-
-
-class Message(models.Model):
-    room = models.ForeignKey(Room, related_name='messages', on_delete=True)
-    message = models.TextField(max_length=MAX_MESSAGE_LENGTH)
-    user = models.ForeignKey(User, on_delete=False)  # insert out custom user
-    created = models.DateTimeField(default=timezone.now)  # ,db_index=True - for optimization?
-    is_read = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.message
-
-
-class ExpiredRoom(models.Model):
-    size = models.PositiveIntegerField(blank=False)
-    # challenges = models.ManyToManyField()
-    # users = models.ManyToManyField()
-    name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH)
-    label = models.SlugField(unique=True)
-    # category = models.ForeignKey(RoomCategory,on_delete=False,related_name=closerooms) ???? 2
-    is_finished = models.BooleanField(default=False)
-    """
-    Пользователья заходит в приложение.входит
-    Клиент получает от сервера список всех текуших закрытых комнат, в которых он сейчас играет
-    по веб сокету он ко всем подключается которые еще не окончены
-    которые окончены- можно в истории глянуть
-    
-    
-    """
-
-
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
-
-def upload_to(instance, filename):
-    return 'user_profile_image/{}/{}'.format(instance.user_id, filename)
-
-
-RELATIONSHIP_STOP_FOLLOW = 0
-RELATIONSHIP_FOLLOWING = 1
-RELATIONSHIP_BLOCKED = 2
-RELATIONSHIP_STATUS = (
-    (RELATIONSHIP_FOLLOWING, 'Following'),
-    (RELATIONSHIP_BLOCKED, 'Blocked')
-)
 
 GENDER_UNKNOWN = 'U'
 GENDER_MALE = 'M'
@@ -101,9 +18,19 @@ GENDER_CHOICES = (
     (GENDER_MALE, 'male'),
     (GENDER_FEMALE, 'female'),
 )
+RELATIONSHIP_STOP_FOLLOW = 0
+RELATIONSHIP_FOLLOWING = 1
+RELATIONSHIP_BLOCKED = 2
+RELATIONSHIP_STATUS = (
+    (RELATIONSHIP_FOLLOWING, 'Following'),
+    (RELATIONSHIP_BLOCKED, 'Blocked')
+)
 
 
-##TODO addlocation
+def upload_to(instance, filename):
+    return 'user_profile_image/{}/{}'.format(instance.user_id, filename)
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     relationship = models.ManyToManyField('self', through='Relationship',
@@ -112,11 +39,13 @@ class UserProfile(models.Model):
     birth_date = models.DateField(blank=True, null=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default=GENDER_UNKNOWN)
     bio = models.TextField(blank=True, max_length=1000)
-    image = models.ImageField(blank=True, null=True, upload_to=upload_to)  ## TODO
-    # completed_challenges = models.ManyToManyFields(Challenge,thr_)
+    image = models.ImageField(blank=True, null=True, upload_to=upload_to)
+    completed_challenges_online = models.ManyToManyField(Challenge, related_name='users',blank=True)
+    completed_challenges_offline = models.ManyToManyField(Challenge, related_name='users_offline',blank=True)
     global_rating = models.IntegerField(default=0)
-    # active_rooms = models.ManyToManyField()
-    personal_rating = models.IntegerField()
+    personal_rating = models.IntegerField(default=0)
+    is_banned = models.BooleanField(default=False)
+    popularity = models.PositiveSmallIntegerField(default=0)
 
     def get_relationships(self, status):
         return self.relationship.filter(
@@ -148,6 +77,67 @@ class UserProfile(models.Model):
         return self.user.username
 
 
+class RoomCategory(models.Model):
+    name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH, default='unsubs', unique=True)
+    description = models.CharField(max_length=MAX_MESSAGE_LENGTH)
+
+    def __str__(self):
+        return self.name
+
+
+class Room(models.Model):
+    name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH)
+    label = models.SlugField(unique=True)
+    users = models.ManyToManyField(UserProfile, related_name='rooms')  # how in this room
+    challenges = models.ManyToManyField(Challenge, related_name='rooms')  # what challenge in this room
+    category = models.ForeignKey(RoomCategory, on_delete=False, related_name='rooms', null=True)
+    expiry = models.DateTimeField(blank=False,
+                                  default=timezone.now() + timezone.timedelta(days=1))  # for 1-1 chat forever
+    size = models.IntegerField(null=False)
+    is_finished = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.label
+
+    @property
+    def group_name(self):
+        """
+        Returns the Channels Group name that sockets should subscribe to to get sent
+        messages as they are generated.
+        """
+        return "room-%s" % self.label
+
+
+class Message(models.Model):
+    room = models.ForeignKey(Room, related_name='messages', on_delete=True)
+    message = models.TextField(max_length=MAX_MESSAGE_LENGTH)
+    user = models.ForeignKey(UserProfile, on_delete=False)  # insert out custom user
+    created = models.DateTimeField(default=timezone.now)  # ,db_index=True - for optimization?
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.message
+
+
+# move rooms after expiration day reached to this model -aka history
+class ExpiredRoom(models.Model):
+    size = models.PositiveIntegerField(blank=False)
+    challenges = models.ManyToManyField(Challenge, 'expired_rooms')
+    users = models.ManyToManyField(UserProfile, related_name='expired_rooms')
+    name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH)
+    label = models.SlugField(unique=True)
+    category = models.ForeignKey(RoomCategory, on_delete=False, related_name='expired_rooms', null=True)
+    is_finished = models.BooleanField(default=True)
+    """
+    Пользователья заходит в приложение.входит
+    Клиент получает от сервера список всех текуших закрытых комнат, в которых он сейчас играет
+    по веб сокету он ко всем подключается которые еще не окончены
+    которые окончены- можно в истории глянуть
+    
+    
+    """
+
+
 class Relationship(models.Model):
     from_person = models.ForeignKey(UserProfile, related_name='from_people', on_delete=False)
     to_person = models.ForeignKey(UserProfile, related_name='to_people', on_delete=False)
@@ -168,6 +158,7 @@ class Relationship(models.Model):
         return 'from ' + self.from_person.user.username + ' to ' + self.to_person.user.username
 
 
+# signals for action save and update  when used user model
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
