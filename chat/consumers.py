@@ -4,6 +4,7 @@ import json
 from rest_framework import status
 from chat.models import Room, Message
 from channels.db import database_sync_to_async
+from django.contrib.auth.models import User
 
 # MSG_TYPES
 MSG_LEAVE = 0
@@ -12,12 +13,68 @@ MSG_MESSAGE = 2
 MSG_GREETING = 3
 MSG_ALERT = 4
 
-
 ###New implementation AsyncJson\
 
 ### in handshake we validate  user token
 ### then on receive_json  we   check  what commands and  and check access to room and
 ###rooms self.scope['user']??
+
+"""
+    Description:
+    
+    
+    available commands:
+    join: join room
+    //
+      Notificate other users in room that you joined
+      Notificate user that successful join with greeting message
+      Get all previous messages if exists 
+    //
+    
+    leave: leave room
+    //
+        Notificate other users that you leave room (go offline)
+        Send user that he succesfully left room
+    //
+    
+    send: send message in room
+    //
+        Send message to specific room
+        Notificate other users that
+        user send a message
+    
+    //
+    
+    notificate user:
+        ????
+    //
+    
+    //
+    notificate user:
+        ????
+    //
+    
+    //
+    
+    complete_challenge:
+    
+    //
+    ?
+    
+    //
+    
+    approve_challenge:
+    //
+
+    //
+    
+    reconnect: reconnect user to active rooms where he play
+    //
+        ?
+    //
+    
+"""
+
 
 class MultiChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -43,8 +100,26 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
                 await  self.leave_room(room)
             elif command == "send":
                 await self.message_send(content['message'], room)
+            elif command == "quit":
+                pass
+            elif command == "ready":
+                pass
+            elif command == "complete_challenge":
+                pass
+            elif command == "approve_challenge":
+                pass
+            elif command == "notificate_user":
+                pass
+            elif command == "notificate_users":
+                pass
+            elif command == "reconnect":
+                pass
+
+
+
+
         except Exception as  error:
-            await self.send_json({"error": error})
+            await self.send_json({"error": 'error'})
 
     async def disconnect(self, code):
         """called when connection is lost for client for any reason"""
@@ -174,21 +249,39 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
 
     # helpers with interaction with db
 
+    # tipa ok
     @database_sync_to_async
     def get_room(self, label):
+        """
+        Get room from by label from rooms,update room.users if needed and return room
+        :raise Access denied
+        :param label:
+        :return: room
+        """
+
         try:
             room = Room.objects.get(label=label)
-            return room
-        except:
-            print("NO Room")
-            raise Exception('CREATE CUSTOM EXCEPTION')
+        except Exception:  # doesnot exits
+            raise Exception("RoomDoesnotExist")
 
+        user = User(self.user).userprofile
+        if room.size < room.users.count() and user not in room.users:
+            # register user to this room and return room
+            room.users.add(user)
+            return room
+        elif user in room.users:
+            return room
+        else:
+            # room alreay full
+            raise Exception('Access Denied')
+
+    # ok
     @database_sync_to_async
     def save_message(self, room, message):
         Message.objects.create(
             room=room,
             message=message,
-            user=self.user
+            user=self.user.profile
         )
 
     @database_sync_to_async
@@ -197,5 +290,5 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         return room
 
     @database_sync_to_async
-    def remove_from_room(self,room):
+    def remove_from_room(self, room):
         pass
