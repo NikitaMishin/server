@@ -24,7 +24,6 @@ from django.conf.urls import url, include
 from chat import urls
 from chat import views
 
-# TODO api for users
 # that u can see who in chat room
 
 
@@ -45,21 +44,18 @@ from rest_framework_jwt.views import verify_jwt_token
 from  django.conf.urls.static import static
 from django.conf import settings
 
-
-def Todo():
-    pass
-
+from  chat.auth import auth_by_access_token
 
 urlpatterns = [
                   # chat
                   url(r'^ws/chat/', include('chat.urls')),
                   url(r'^w1.0/', include(router.urls)),
-                  url(r'^auth-jwt/', obtain_jwt_token),
-                  url(r'^auth-jwt-refresh/', refresh_jwt_token),
-                  url(r'^auth-jwt-verify', verify_jwt_token),
-                  url(r'^auth-social-verify/', Todo),
+                  url(r'^auth/auth-jwt/', obtain_jwt_token),
+                  url(r'^auth/auth-jwt-refresh/', refresh_jwt_token),
+                  url(r'^auth/auth-jwt-verify', verify_jwt_token),
+                  url(r'^auth/auth-by-access-token/(?P<backend>[^/]+)/$', auth_by_access_token),
                   url(r'^w1.0/get_following/', get_followers_info),
+                  # url(r'^auth/', include('rest_framework_social_oauth2.urls')),
                   # url(r'^w1.0/relationship/(?P<action>[0-2]{1})/(?P<id>[0-9]+)',relationship_action),
                   path('admin/', admin.site.urls),
-
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
