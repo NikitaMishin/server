@@ -22,9 +22,11 @@ class PlotChallenge(models.Model):
         return self.name
 
 #unique-True
+
+
 class Challenge(models.Model):
     name = models.CharField(max_length=200, default='challenge_name')
-    category_challenge = models.ManyToManyField(CategoryChallenge, 'challenge_category',blank=True)
+    category_challenge = models.ManyToManyField(CategoryChallenge, 'challenge_category', blank=True)
     pub_date = models.DateTimeField('date published', default=timezone.now)
     edit_date = models.DateTimeField('date edited', default=timezone.now)
     description = models.CharField(max_length=500)

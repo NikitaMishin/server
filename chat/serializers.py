@@ -4,6 +4,20 @@ from .models import Room, Message, RoomCategory, UserProfile
 from django.contrib.auth.models import User
 
 # TODO add extra fields and extend model
+
+
+class RoomSearchSerializers(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Room
+        fields = ('name', 'category', 'url')
+
+
+class UserSearchSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'last_name', 'first_name', 'url')
+
+
 class RoomSerializers(serializers.HyperlinkedModelSerializer):
     # messages = serializers.StringRelatedField(many=True)
     class Meta:
