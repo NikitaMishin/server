@@ -7,9 +7,11 @@ from rest_framework.viewsets import GenericViewSet
 
 from .models import Room, Message, RoomCategory, UserProfile, Relationship
 
-from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+
+from rest_framework import viewsets, filters
 from .serializers import PersonSerializers, RoomSerializers, MessageSerializers, RoomCategorySerializers, RoomCategory, \
-    UserProfileSerializer
+    UserProfileSerializer, RoomSearchSerializers, UserSearchSerializers
 # RestrictUserProfile
 # Create your views here.
 
@@ -35,6 +37,22 @@ from rest_framework import status
 # room = RoomSerializers(room)
 # messages = MessageSerializers(messages,many=True)
 # return Response({'room':room.data,'messages':messages.data},status=status.HTTP_200_OK)
+
+class RoomListView(viewsets.ModelViewSet):
+    queryset = Room.objects.all()
+    serializer_class = RoomSearchSerializers
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
+    filter_fields = ('name', 'category__name')
+    ordering = ('-expiry',)
+
+
+class UserListView(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSearchSerializers
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
+    filter_fields = ('username', 'email', 'last_name', 'first_name')
+    ordering = ('-date_joined',)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """

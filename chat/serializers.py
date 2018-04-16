@@ -20,6 +20,20 @@ class UserProfileSerializer(serializers.HyperlinkedModelSerializer):
 
 
 # TODO add extra fields and extend model
+
+
+class RoomSearchSerializers(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Room
+        fields = ('name', 'category', 'url')
+
+
+class UserSearchSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'last_name', 'first_name', 'url')
+
+
 class RoomSerializers(serializers.HyperlinkedModelSerializer):
     # messages = serializers.StringRelatedField(many=True)
     users = UserProfileSerializer(many=True, read_only=True)

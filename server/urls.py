@@ -18,7 +18,8 @@ from django.contrib import admin
 from django.urls import path
 from rest_framework import routers
 from chat.views import RoomViewSet, UserViewSet, RoomCategoryViewSet, UserProfileViewSet, get_followers_info, \
-    relationship_action
+    relationship_action, UserListView, RoomListView
+from database.views import ChallengeListView
 from django.conf.urls import url, include
 
 from chat import urls
@@ -27,8 +28,10 @@ from chat import views
 # that u can see who in chat room
 
 
-
 router = routers.DefaultRouter()
+router.register(r'users_search', UserListView, base_name='users_search')
+router.register(r'rooms_search', RoomListView, base_name='rooms_search')
+router.register(r'challenges_search', ChallengeListView)
 router.register(r'users', UserViewSet)
 router.register(r'rooms', RoomViewSet)
 router.register(r'category', RoomCategoryViewSet)

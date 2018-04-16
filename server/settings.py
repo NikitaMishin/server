@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'social_django',
-
+    'django_filters',
 ]
 
 SOCIAL_AUTH_USER_MODEL = 'auth.User'
@@ -152,6 +152,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
 
     ),
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
 
 AUTHENTICATION_BACKENDS = (
