@@ -45,17 +45,19 @@ from  django.conf.urls.static import static
 from django.conf import settings
 
 from  chat.auth import auth_by_access_token
+from chat.views import logout_user
 
 urlpatterns = [
                   # chat
                   url(r'^ws/chat/', include('chat.urls')),
+                  # category,room,userpofiles
                   url(r'^w1.0/', include(router.urls)),
+                  url(r'^w1.0/get_following/', get_followers_info),
+                  # auth
                   url(r'^auth/auth-jwt/', obtain_jwt_token),
                   url(r'^auth/auth-jwt-refresh/', refresh_jwt_token),
                   url(r'^auth/auth-jwt-verify', verify_jwt_token),
                   url(r'^auth/auth-by-access-token/(?P<backend>[^/]+)/$', auth_by_access_token),
-                  url(r'^w1.0/get_following/', get_followers_info),
-                  # url(r'^auth/', include('rest_framework_social_oauth2.urls')),
-                  # url(r'^w1.0/relationship/(?P<action>[0-2]{1})/(?P<id>[0-9]+)',relationship_action),
+                  url(r'auth/logout/', logout_user),
                   path('admin/', admin.site.urls),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -3,33 +3,6 @@ from rest_framework import serializers
 from .models import Room, Message, RoomCategory, UserProfile
 from django.contrib.auth.models import User
 
-# TODO add extra fields and extend model
-class RoomSerializers(serializers.HyperlinkedModelSerializer):
-    # messages = serializers.StringRelatedField(many=True)
-    class Meta:
-        model = Room
-        fields = ('name', 'label', 'url')  # ,'messages'
-
-
-class RoomCategorySerializers(serializers.HyperlinkedModelSerializer):
-    rooms = RoomSerializers(many=True)
-
-    class Meta:
-        model = RoomCategory
-        fields = ('name', 'rooms', 'url')
-
-
-class PersonSerializers(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = User
-        fields = ('email', 'username', 'url', 'userprofile')
-
-
-class MessageSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = Message
-        fields = '__all__'
-
 
 class UserInfo(serializers.ModelSerializer):
     class Meta:
@@ -44,3 +17,34 @@ class UserProfileSerializer(serializers.HyperlinkedModelSerializer):
         model = UserProfile
         fields = ('url', 'birth_date', 'image', 'gender', 'bio', 'user')  # related_to - how folliwing
         read_only_fields = ('url', 'image')
+
+
+# TODO add extra fields and extend model
+class RoomSerializers(serializers.HyperlinkedModelSerializer):
+    # messages = serializers.StringRelatedField(many=True)
+    users = UserProfileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Room
+        fields = ('name', 'label', 'url', 'size', 'users', 'expiry', 'category')
+        read_only_fields = ('label', 'users')
+
+
+class RoomCategorySerializers(serializers.HyperlinkedModelSerializer):
+    rooms = RoomSerializers(many=True, read_only=True)
+
+    class Meta:
+        model = RoomCategory
+        fields = ('name', 'rooms', 'url', 'description')
+
+
+class PersonSerializers(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'username', 'url', 'userprofile')
+
+
+class MessageSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = '__all__'

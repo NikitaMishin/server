@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import GenericViewSet
 
@@ -39,6 +40,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
       API endpoint that allows users to be viewed or edited.
       """
+    permission_classes = (IsAuthenticated,)
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = PersonSerializers
 
@@ -47,6 +49,8 @@ class RoomViewSet(viewsets.ModelViewSet):
     """
      API endpoint that allows rooms to be viewed or edited.
      """
+    permission_classes = (IsAuthenticated,)
+
     queryset = Room.objects.all()
     serializer_class = RoomSerializers
 
@@ -55,6 +59,8 @@ class RoomCategoryViewSet(viewsets.ModelViewSet):
     """
     Api endpoint that allows different category of rooms be viewed or edited
     """
+    permission_classes = (IsAuthenticated,)
+
     queryset = RoomCategory.objects.all()
     serializer_class = RoomCategorySerializers
 
@@ -119,19 +125,19 @@ END_FOLLOW = str(RELATIONSHIP_STOP_FOLLOW)
 # to start follow or remove follow or block user
 @api_view(['GET'])
 @login_required()
-def relationship_action(request, action,id):
+def relationship_action(request, action, id):
     pass
-   # try:
-       # user = UserProfile.objects.get(id=id)
-       # if action == START_FOLLOW:
-       #     relationship = Relationship.objects.filter(to_person=user,from_person=request.user)
-      #      relationship.
-     #   elif action == END_FOLLOW:
+    # try:
+    # user = UserProfile.objects.get(id=id)
+    # if action == START_FOLLOW:
+    #     relationship = Relationship.objects.filter(to_person=user,from_person=request.user)
+    #      relationship.
+    #   elif action == END_FOLLOW:
     #    print(END_FOLLOW)
-   # elif action == BLOCK_FOLLOW:
-     #   print(BLOCK_FOLLOW)
-    #except Exception:
-        #return Response()
+    # elif action == BLOCK_FOLLOW:
+    #   print(BLOCK_FOLLOW)
+    # except Exception:
+    # return Response()
 
 
 
@@ -151,3 +157,10 @@ def relationship_action(request, action,id):
     ### like challenge
     ### create room
     ### create challenge
+
+
+@api_view(['GET'])
+def logout_user(request):
+    from django.contrib.auth import logout
+    logout(request)
+    return Response(status=200, data={'message': 'logout'})

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.template.defaultfilters import slugify
 from django.utils import timezone
 
 from django.contrib.auth.models import User
@@ -40,10 +41,10 @@ class UserProfile(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default=GENDER_UNKNOWN)
     bio = models.TextField(blank=True, max_length=1000)
     image = models.ImageField(blank=True, null=True, upload_to=upload_to)
-    completed_challenges_online = models.ManyToManyField(Challenge, related_name='users',blank=True)
-    completed_challenges_offline = models.ManyToManyField(Challenge, related_name='users_offline',blank=True)
+    completed_challenges_online = models.ManyToManyField(Challenge, related_name='users', blank=True)
+    completed_challenges_offline = models.ManyToManyField(Challenge, related_name='users_offline', blank=True)
     global_rating = models.IntegerField(default=0)
-    personal_rating = models.IntegerField(default=0)
+    personal_rating = models.IntegerField(default=0)  # AKA WEEK?
     is_banned = models.BooleanField(default=False)
     popularity = models.PositiveSmallIntegerField(default=0)
 
@@ -89,12 +90,19 @@ class Room(models.Model):
     name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH)
     label = models.SlugField(unique=True)
     users = models.ManyToManyField(UserProfile, related_name='rooms')  # how in this room
-    challenges = models.ManyToManyField(Challenge, related_name='rooms')  # what challenge in this room
-    category = models.ForeignKey(RoomCategory, on_delete=False, related_name='rooms', null=True)
+    challenges = models.ManyToManyField(Challenge, related_name='rooms', blank=True)  # what challenge in this room
+    category = models.ForeignKey(RoomCategory, on_delete=False, related_name='rooms', null=True, blank=True)
     expiry = models.DateTimeField(blank=False,
-                                  default=timezone.now() + timezone.timedelta(days=1))  # for 1-1 chat forever
+                                  default=timezone.now() + timezone.timedelta(days=2))  # for 1-1 chat forever
     size = models.IntegerField(null=False)
     is_finished = models.BooleanField(default=False)
+    is_ready = models.BooleanField(default=False)
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        if not self.id:
+            self.label = slugify(self.name)
+        super(Room, self).save(force_insert, force_update, using, update_fields)
 
     def __str__(self):
         return self.label
