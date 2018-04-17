@@ -8,9 +8,9 @@ class JWTAuthMiddleware:
 
     def __call__(self, scope):
         try:
-            #change on uri named args
-            token_header = dict(scope['headers'])[b'sec-websocket-protocol'].decode().split()
-            data = VerifyJSONWebTokenSerializer().validate({'token':token_header})
+            query_string = scope['query_string']
+            token_header = query_string.decode().split('=')[1]
+            data = VerifyJSONWebTokenSerializer().validate({'token': token_header})
             scope['user'] = data['user']
         except:
             scope['user'] = AnonymousUser
