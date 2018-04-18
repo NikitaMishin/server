@@ -26,7 +26,7 @@ SECRET_KEY = 't150r0f^0gvt7%18gxbt!aeg^hnk4c$_m+kw179()iyrrihvwi'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -89,11 +89,11 @@ ASGI_APPLICATION = 'server.routing.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'dbs',
-        'USER': 'root',
-        'PASSWORD': 'fhvfutljy7',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'NAME': 'nasdb',
+        'USER': 'nas',
+        'PASSWORD': 'little_nastya',
+        'HOST': 'hserver.leningradskaya105.ru',
+        'PORT': '8000',
     }
 }
 
@@ -172,3 +172,9 @@ AUTHENTICATION_BACKENDS = (
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+
+try:
+    from .settings_prod import *
+except:
+    pass
