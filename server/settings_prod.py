@@ -18,8 +18,8 @@ DATABASES = {
         'NAME': 'nasdb',
         'USER': 'nas',
         'PASSWORD': 'little_nastya',
-        'HOST': 'hserver.leningradskaya105.ru',
-        'PORT': '8000',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 
