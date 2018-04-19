@@ -24,9 +24,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 't150r0f^0gvt7%18gxbt!aeg^hnk4c$_m+kw179()iyrrihvwi'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -82,20 +79,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'server.wsgi.application'
 
 ASGI_APPLICATION = 'server.routing.application'
-# Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'nasdb',
-        'USER': 'nas',
-        'PASSWORD': 'little_nastya',
-        'HOST': 'hserver.leningradskaya105.ru',
-        'PORT': '8000',
-    }
-}
 
 # Channel Layers for  chat
 
