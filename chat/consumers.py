@@ -97,10 +97,10 @@ ACTION_ONLINE = 'online'
 class MultiChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.user = self.scope['user']
-        self.userprofile = self.user.userprofile
         if self.user.is_anonymous:
             await self.close()
         else:
+            self.userprofile = self.user.userprofile
             await self.accept()
         self.rooms = set()
 
