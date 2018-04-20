@@ -24,9 +24,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 't150r0f^0gvt7%18gxbt!aeg^hnk4c$_m+kw179()iyrrihvwi'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -82,17 +79,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'server.wsgi.application'
 
 ASGI_APPLICATION = 'server.routing.application'
-# Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
-
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
 
 # Channel Layers for  chat
 
@@ -169,6 +155,12 @@ AUTHENTICATION_BACKENDS = (
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+
+try:
+    from .settings_prod import *
+except:
+    pass
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
