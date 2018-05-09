@@ -8,8 +8,12 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from  database.models import Challenge
 
-MAX_MESSAGE_LENGTH = 500
-MAX_ROOM_NAME_LENGTH = 255
+from database.models import  CHAR_SIZE_LIMITED,DESCRIPTION_SIZE_LIMITED
+
+DESCRIPTION_SIZE = DESCRIPTION_SIZE_LIMITED
+MAX_ROOM_NAME_LENGTH = CHAR_SIZE_LIMITED
+
+
 
 GENDER_UNKNOWN = 'U'
 GENDER_MALE = 'M'
@@ -80,7 +84,7 @@ class UserProfile(models.Model):
 
 class RoomCategory(models.Model):
     name = models.CharField(max_length=MAX_ROOM_NAME_LENGTH, default='unsubs', unique=True)
-    description = models.CharField(max_length=MAX_MESSAGE_LENGTH)
+    description = models.TextField(max_length=DESCRIPTION_SIZE)
 
     def __str__(self):
         return self.name
@@ -118,7 +122,7 @@ class Room(models.Model):
 
 class Message(models.Model):
     room = models.ForeignKey(Room, related_name='messages', on_delete=True)
-    message = models.TextField(max_length=MAX_MESSAGE_LENGTH)
+    message = models.TextField(max_length=DESCRIPTION_SIZE)
     user = models.ForeignKey(UserProfile, on_delete=False)  # insert out custom user
     created = models.DateTimeField(default=timezone.now)  # ,db_index=True - for optimization?
     is_read = models.BooleanField(default=False)

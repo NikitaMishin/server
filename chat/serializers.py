@@ -5,9 +5,21 @@ from django.contrib.auth.models import User
 
 
 class UserInfo(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
-        fields = ('username', 'email', 'last_name', 'first_name')
+        fields = ('username', 'email', 'last_name', 'first_name', 'password')
+
+    def create(self, validated_data):
+        user = User.objects.create(
+            username=validated_data['username'],
+
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+
+        return user
 
 
 class UserProfileSerializer(serializers.HyperlinkedModelSerializer):
@@ -15,11 +27,9 @@ class UserProfileSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ('url', 'birth_date', 'image', 'gender', 'bio', 'user')  # related_to - how folliwing
+        fields = ('url', 'birth_date', 'image', 'gender', 'bio', 'user','global_rating','popularity')  # related_to - how folliwing
         read_only_fields = ('url', 'image')
 
-
-# TODO add extra fields and extend model
 
 
 class RoomSearchSerializers(serializers.HyperlinkedModelSerializer):

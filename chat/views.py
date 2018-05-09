@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from rest_framework.generics import CreateAPIView
 from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
@@ -9,9 +10,9 @@ from .models import Room, Message, RoomCategory, UserProfile, Relationship
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, permissions
 from .serializers import PersonSerializers, RoomSerializers, MessageSerializers, RoomCategorySerializers, RoomCategory, \
-    UserProfileSerializer, RoomSearchSerializers, UserSearchSerializers
+    UserProfileSerializer, RoomSearchSerializers, UserSearchSerializers, UserInfo
 # RestrictUserProfile
 # Create your views here.
 
@@ -44,6 +45,7 @@ class RoomListView(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filter_fields = ('name', 'category__name')
     ordering = ('-expiry',)
+    permission_classes = (IsAuthenticated,)
 
 
 class UserListView(viewsets.ModelViewSet):
@@ -52,6 +54,7 @@ class UserListView(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filter_fields = ('username', 'email', 'last_name', 'first_name')
     ordering = ('-date_joined',)
+    permission_classes = (IsAuthenticated,)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -61,6 +64,14 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = PersonSerializers
+
+
+class CreateUserView(CreateAPIView):
+    model = User
+    permission_classes = [
+        permissions.AllowAny  # Or anon users can't register
+    ]
+    serializer_class = UserInfo
 
 
 class RoomViewSet(viewsets.ModelViewSet):
@@ -156,9 +167,6 @@ def relationship_action(request, action, id):
     #   print(BLOCK_FOLLOW)
     # except Exception:
     # return Response()
-
-
-
 
     ###see friends
     ### see followers

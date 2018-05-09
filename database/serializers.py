@@ -9,8 +9,8 @@ class ChallengeCategorySearchSerializers(serializers.HyperlinkedModelSerializer)
 
 
 class ChallengeSearchSerializers(serializers.HyperlinkedModelSerializer):
-    category_challenge = ChallengeCategorySearchSerializers(many=True)
+    category_challenge = ChallengeCategorySearchSerializers(many=True) #TODO ,read_only=True or override method
 
     class Meta:
         model = Challenge
-        fields = ('name', 'category_challenge', 'url')
+        fields = ('__all__')

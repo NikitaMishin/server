@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from rest_framework import routers
 from chat.views import RoomViewSet, UserViewSet, RoomCategoryViewSet, UserProfileViewSet, get_followers_info, \
-    relationship_action, UserListView, RoomListView
+    relationship_action, UserListView, RoomListView, CreateUserView
 from database.views import ChallengeListView
 from django.conf.urls import url, include
 
@@ -44,10 +44,10 @@ from rest_framework_jwt.views import obtain_jwt_token
 from rest_framework_jwt.views import refresh_jwt_token
 from rest_framework_jwt.views import verify_jwt_token
 
-from  django.conf.urls.static import static
+from django.conf.urls.static import static
 from django.conf import settings
 
-from  chat.auth import auth_by_access_token
+from chat.auth import auth_by_access_token
 from chat.views import logout_user
 
 urlpatterns = [
@@ -57,10 +57,11 @@ urlpatterns = [
                   url(r'^w1.0/', include(router.urls)),
                   url(r'^w1.0/get_following/', get_followers_info),
                   # auth
+                  url(r'auth/register/', CreateUserView.as_view()),
                   url(r'^auth/auth-jwt/', obtain_jwt_token),
                   url(r'^auth/auth-jwt-refresh/', refresh_jwt_token),
                   url(r'^auth/auth-jwt-verify', verify_jwt_token),
                   url(r'^auth/auth-by-access-token/(?P<backend>[^/]+)/$', auth_by_access_token),
-                  url(r'auth/logout/', logout_user),
+                  url(r'^auth/logout/', logout_user),
                   path('admin/', admin.site.urls),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

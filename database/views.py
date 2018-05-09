@@ -1,3 +1,5 @@
+from rest_framework.permissions import IsAuthenticated
+
 from .models import Challenge
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -12,3 +14,4 @@ class ChallengeListView(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filter_fields = ('name', 'category_challenge__name')
     ordering = ('-pub_date',)
+    permission_classes = (IsAuthenticated,)

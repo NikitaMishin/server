@@ -8,7 +8,7 @@ from rest_framework_jwt.settings import api_settings
 payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 encode_handler = api_settings.JWT_ENCODE_HANDLER
 
-
+##@dra()
 @psa()
 @api_view(['GET'])
 def auth_by_access_token(request, backend):
@@ -23,4 +23,4 @@ def auth_by_access_token(request, backend):
         else:
             return Response(data={'token': None}, status=404)
     except ValueError:
-        return Response(data={'error': 'wrong'}, status=401)
+        return Response(data={'error': 'Credentials are not provided'}, status=401)
