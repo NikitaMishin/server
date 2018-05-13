@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from rest_framework import routers
 from chat.views import RoomViewSet, UserViewSet, RoomCategoryViewSet, UserProfileViewSet, get_followers_info, \
-    relationship_action, UserListView, RoomListView, CreateUserView
+    relationship_action, UserListView, RoomListView, CreateUserView, get_user_profile
 from database.views import ChallengeListView
 from django.conf.urls import url, include
 
@@ -56,6 +56,7 @@ urlpatterns = [
                   # category,room,userpofiles
                   url(r'^w1.0/', include(router.urls)),
                   url(r'^w1.0/get_following/', get_followers_info),
+                  url(r'^w1.0/get_profile/(?P<username>[^/]+)/$', get_user_profile),
                   # auth
                   url(r'auth/register/', CreateUserView.as_view()),
                   url(r'^auth/auth-jwt/', obtain_jwt_token),

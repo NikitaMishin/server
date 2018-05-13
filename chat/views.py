@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from rest_framework.generics import CreateAPIView
 from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
@@ -12,7 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import viewsets, filters, permissions
 from .serializers import PersonSerializers, RoomSerializers, MessageSerializers, RoomCategorySerializers, RoomCategory, \
-    UserProfileSerializer, RoomSearchSerializers, UserSearchSerializers, UserInfo
+    UserProfileSerializer, RoomSearchSerializers, UserSearchSerializers, UserInfo, CleintUserProfileSerializer
 # RestrictUserProfile
 # Create your views here.
 
@@ -190,3 +190,12 @@ def logout_user(request):
     from django.contrib.auth import logout
     logout(request)
     return Response(status=200, data={'message': 'logout'})
+
+##hardcoded
+@api_view(('GET',))
+def get_user_profile(request, username):
+    try:
+        id  = User.objects.get(username= username).id
+        return redirect("http://hserver.leningradskaya105.ru:6379/w1.0/user_profiles/w1.0/user_profiles/"+str(id))
+    except Exception as error:
+        return Response(status=400)
