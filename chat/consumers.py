@@ -12,6 +12,10 @@ from django.contrib.auth.models import User
 from chat.serializers import MessageSerializers
 from database.models import Challenge
 
+NO_MESSAGE = "no_messsage"
+TO_ALL_USERS = 'all'
+TO_ME = 'self'
+
 MSG_LEAVE = 0
 MSG_JOIN = 1
 MSG_MESSAGE = 2
@@ -31,6 +35,7 @@ ACTION_ERROR = 'error'
 ACTION_USER_COMPLETE = 'user complete'
 ACTION_DENIED = 'denied'
 ACTION_ONLINE = 'online'
+ACTION_LEAVE = 'leave'
 ###New implementation AsyncJson\
 
 ### in handshake we validate  user token
@@ -92,6 +97,18 @@ ACTION_ONLINE = 'online'
     //
     
 """
+
+
+def return_value(action, room_label, username, msg_type, message):
+    return {
+        'action': action,
+        'msg_type': msg_type,
+        'detail': {
+            'label': room_label,
+            'username': username,
+            'message': message
+        }
+    }
 
 
 class MultiChatConsumer(AsyncJsonWebsocketConsumer):
@@ -245,11 +262,11 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
             self.channel_name
         )
         # send client message that he successfully join this room
-        await self.send_json({
-            'action': ACTION_JOIN,
-            'title': room.name,
-            'label': label,
-        })
+        await self.send_json(
+            return_value(
+                ACTION_JOIN, room.label, TO_ME, ACTION_JOIN, NO_MESSAGE
+            )
+        )
 
         # check that room is full and if so then start games and send clients challenge
         challenge = await self.is_ready_to_start(label)
@@ -289,9 +306,11 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
             self.channel_name
         )
 
-        await self.send_json({
-            "leave": room.label,
-        })
+        await self.send_json(
+            return_value(
+                ACTION_LEAVE, room.label, TO_ME, MSG_LEAVE, NO_MESSAGE
+            )
+        )
 
     async def quit_room(self, label):
         """
@@ -316,76 +335,87 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
             )
         else:
             self.send_json(
-                {
-                    'action': ACTION_DENIED,
-                    'label': label,
-                    'title': room.name,
-                }
+                return_value(
+                    ACTION_DENIED,
+                    label,
+                    TO_ME,
+                    MSG_LEAVE,
+                    NO_MESSAGE
+                )
             )
 
     async def chat_leave(self, event):
         """Called when someone leave chat aka went offline"""
         await self.send_json(
-            {
-                'username': event['username'],
-                'msg_type': MSG_LEAVE,
-                'label': event['label'],
-                'title': event['title'],
-                'action': ACTION_WENT_OFFLINE,
-            }
+            return_value(
+                ACTION_WENT_OFFLINE,
+                event['label'],
+                event['username'],
+                MSG_LEAVE,
+                NO_MESSAGE
+            )
         )
 
     async def chat_join(self, event):
         """Called when someone enter a  chat"""
         await self.send_json(
-            {
-                'username': event['username'],
-                'msg_type': MSG_JOIN,
-                'label': event['label'],
-                'action': ACTION_JOIN,
-                'title': event['title'],
-            }
+            return_value(
+                ACTION_JOIN,
+                event['label'],
+                event['username'],
+                MSG_JOIN,
+                NO_MESSAGE
+            )
         )
 
     async def chat_message(self, event):
         """Called when someone send a message in room"""
         await self.send_json(
-            {
-                'username': event['username'],
-                'msg_type': MSG_MESSAGE,
-                'label': event['label'],
-                'message': event['message'],
-                'title': event['title'],
-                'action': ACTION_MESSAGE,
-            }
+            return_value(
+                ACTION_MESSAGE,
+                event['label'],
+                event['username'],
+                MSG_MESSAGE,
+                event['message']
+            )
         )
 
     async def chat_nextchallenge(self, event):
         """
         Called when all users completed challenge and need fetch next challenge
+        //TODO
         """
-        await self.send_json(
-            {
-                'challenge': event['challenge'],
-                'label': event['label'],
-                'title': event['title'],
-                'msg_type': MSG_ALERT,
-                'action': ACTION_COMPLETE,
-            }
+        await  self.send_json(
+            return_value(
+                ACTION_COMPLETE,
+                event['label'],
+                TO_ALL_USERS,
+                MSG_ALERT,
+                NO_MESSAGE
+            )
         )
+        ##await self.send_json(
+        ##  {
+        ##    'challenge': event['challenge'],
+        ##  'label': event['label'],
+        ## 'title': event['title'],
+        ## 'msg_type': MSG_ALERT,
+        ## 'action': ACTION_COMPLETE,
+        ## }
+        ##)
 
     async def chat_usercompletechallenge(self, event):
         """
         Called when someone complete challenge
         """
         await self.send_json(
-            {
-                'label': event['label'],
-                'title': event['title'],
-                'msg_type': MSG_ALERT,
-                'action': ACTION_USER_COMPLETE,
-                'username': event['username']
-            }
+            return_value(
+                ACTION_USER_COMPLETE,
+                event['label'],
+                event['username'],
+                MSG_ALERT,
+                NO_MESSAGE
+            )
         )
 
         # TODO send all users in room that game start and that 's a new challenge to complete
@@ -395,27 +425,27 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         Called when someone claim to accept that he complete challenge
         """
         await self.send_json(
-            {
-                'label': event['label'],
-                'title': event['title'],
-                'msg_type': MSG_ALERT,
-                'action': ACTION_APPROVE,
-                'username': event['username']
-            }
+            return_value(
+                ACTION_APPROVE,
+                event['label'],
+                event['username'],
+                MSG_ALERT,
+                NO_MESSAGE
+            )
         )
 
     async def chat_quit(self, event):
         """
         Called when when someone exit room
         """
-        await self.send_json(
-            {
-                'label': event['label'],
-                'msg_type': MSG_ALERT,
-                'title': event['title'],
-                'username': event['username'],
-                'action': ACTION_QUIT,
-            }
+        await  self.send_json(
+            return_value(
+                ACTION_QUIT,
+                event['label'],
+                event['username'],
+                MSG_ALERT,
+                NO_MESSAGE
+            )
         )
 
     async def chat_reconnect(self, event):
@@ -423,13 +453,12 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         Called when someone reconnect to room
         """
         await self.send_json(
-            {
-                'label': event['label'],
-                'msg_type': MSG_JOIN,
-                'title': event['title'],
-                'username': event['username'],
-                'action': ACTION_ONLINE,
-            }
+            return_value(
+                ACTION_ONLINE,
+                event['label'],
+                event['username'],
+                MSG_JOIN,
+                NO_MESSAGE)
         )
 
     async def chat_refresh(self, label):
@@ -438,13 +467,8 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         """
         room = await self.get_room(label)
         messages = await self.fetch_all_message(room)
-        await self.send_json(
-            {
-                'messages': messages,
-                'action': ACTION_REFRESH_CHAT,
-                'label': label,
-                'title': room.name
-            }
+        await  self.send_json(
+            return_value(ACTION_REFRESH_CHAT, label, "self", MSG_MESSAGE, messages)
         )
 
     # helpers with interaction with db
