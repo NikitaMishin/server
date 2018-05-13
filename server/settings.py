@@ -91,6 +91,10 @@ CHANNEL_LAYERS = {
     },
 }
 
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=70),
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 
@@ -141,8 +145,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
 
-
-SOCIAL_AUTH_VK_OAUTH2_KEY = '566c36af566c36af566c36af73560eb6055566c566c36af0cb67f836485360d4396e1d9' ##will be on andrpod client
+SOCIAL_AUTH_VK_OAUTH2_KEY = '566c36af566c36af566c36af73560eb6055566c566c36af0cb67f836485360d4396e1d9'  ##will be on andrpod client
 SOCIAL_AUTH_VK_OAUTH2_SECRET = 'NfsomnZxoTJMQNlUW2WN'
 
 AUTHENTICATION_BACKENDS = (
@@ -160,7 +163,6 @@ AUTHENTICATION_BACKENDS = (
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
-
 try:
     from .settings_prod import *
 except:
@@ -168,7 +170,6 @@ except:
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-
-#STATICFILES_DIRS = (
+# STATICFILES_DIRS = (
 #    os.path.join(BASE_DIR, 'static/'),
-#)
+# )
