@@ -128,7 +128,6 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         try:
             command = content.get("command", None)
             room_label = content["room_label"]
-
             if command == "join":
                 await self.join_room(room_label)
             elif command == "leave":
@@ -140,11 +139,11 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
             elif command == "complete_challenge":
                 await self.complete_challenge(room_label)
             elif command == "approve_challenge":
-                self.approve_challenge(room_label, content['username'])
+                await self.approve_challenge(room_label, content['username'])
             elif command == "reconnect":
-                self.reconnect_client()
+                await self.reconnect_client()
             elif command == "refresh_chat":
-                self.chat_refresh(room_label)
+                await self.chat_refresh(room_label)
             elif command == "notificate_user":
                 pass
             elif command == "notificate_users":
@@ -226,7 +225,7 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         if label not in self.rooms:
             raise Exception("Room access denied")
         room = await self.get_room(label)
-        await self.save_message(message)
+        await self.save_message(room, message)
         await self.channel_layer.group_send(
             room.group_name,
             {
@@ -487,17 +486,17 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
             raise Exception("RoomDoesnotExist")
 
         user = User(self.user).userprofile
-        if room.size < room.users.count() and user not in room.users:
+        if room.size < room.users.count() and user not in room.users.all():
             # register user to this room and return room
             room.users.add(user)
             return room
-        elif user in room.users:
+        elif user in room.users.all():
             return room
         else:
             # room already full
             raise Exception('Access Denied')
 
-            # ok
+            #
 
     @database_sync_to_async
     def save_message(self, room, message):
@@ -529,7 +528,7 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def reconnect(self):
-        return UserProfile(self.userprofile).rooms.all()
+        return self.userprofile.rooms.all()
 
     @database_sync_to_async
     def is_ready_to_start(self, label):
