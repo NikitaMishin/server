@@ -54,6 +54,8 @@ class RoomSerializers(serializers.HyperlinkedModelSerializer):
         read_only_fields = ('label', 'users')
 
 
+
+
 class RoomCategorySerializers(serializers.HyperlinkedModelSerializer):
     rooms = RoomSerializers(many=True, read_only=True)
 
@@ -72,3 +74,14 @@ class MessageSerializers(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = '__all__'
+
+
+class RoomSerializersWithLastMessage(serializers.HyperlinkedModelSerializer):
+    messages = serializers.StringRelatedField(many=True)
+    users = UserProfileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Room
+        fields = ('name', 'label', 'url', 'size', 'users', 'expiry', 'category','messages')
+        read_only_fields = ('label', 'users')
+
