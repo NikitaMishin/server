@@ -12,7 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import viewsets, filters, permissions
 from .serializers import PersonSerializers, RoomSerializers, MessageSerializers, RoomCategorySerializers, RoomCategory, \
-    UserProfileSerializer, RoomSearchSerializers, UserSearchSerializers, UserInfo, CleintUserProfileSerializer
+    UserProfileSerializer, RoomSearchSerializers, UserSearchSerializers, UserInfo
 # RestrictUserProfile
 # Create your views here.
 
@@ -196,6 +196,6 @@ def logout_user(request):
 def get_user_profile(request, username):
     try:
         id  = User.objects.get(username= username).id
-        return redirect("http://hserver.leningradskaya105.ru:6379/w1.0/user_profiles/w1.0/user_profiles/"+str(id))
+        return redirect("http://hserver.leningradskaya105.ru:6379/w1.0/user_profiles/"+str(id))
     except Exception as error:
         return Response(status=400)

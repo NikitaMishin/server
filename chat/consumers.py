@@ -125,33 +125,34 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         """
 
         """
-        try:
-            command = content.get("command", None)
-            room_label = content["room_label"]
-            if command == "join":
-                await self.join_room(room_label)
-            elif command == "leave":
-                await  self.leave_room(room_label)
-            elif command == "send":
-                await self.message_send(content['message'], room_label)
-            elif command == "quit":
-                await self.quit_room(room_label)
-            elif command == "complete_challenge":
-                await self.complete_challenge(room_label)
-            elif command == "approve_challenge":
-                await self.approve_challenge(room_label, content['username'])
-            elif command == "reconnect":
-                await self.reconnect_client()
-            elif command == "refresh_chat":
-                await self.chat_refresh(room_label)
-            elif command == "notificate_user":
-                pass
-            elif command == "notificate_users":
-                pass
-        except Exception as  error:
-            await self.send_json({"action": ACTION_ERROR})
+        print(content)
+        command = content.get("command", None)
+        room_label = content["room_label"]
+        if command == "join":
+            await self.join_room(room_label)
+        elif command == "leave":
+            await  self.leave_room(room_label)
+        elif command == "send":
+            await self.message_send(content['message'], room_label)
+        elif command == "quit":
+            await self.quit_room(room_label)
+        elif command == "complete_challenge":
+            await self.complete_challenge(room_label)
+        elif command == "approve_challenge":
+            await self.approve_challenge(room_label, content['username'])
+        elif command == "reconnect":
+            await self.reconnect_client()
+        elif command == "refresh_chat":
+            await self.chat_refresh(room_label)
+        elif command == "notificate_user":
+            pass
+        elif command == "notificate_users":
+            pass
+        #except Exception as  error:
+        #    await self.send_json({"action": ACTION_ERROR})
 
     async def reconnect_client(self):
+        print("BEFOR")
         rooms = await self.reconnect()
         for room in rooms:
             self.rooms.add(room.label)
@@ -166,13 +167,14 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
             )
             await self.channel_layer.group_add(
                 room.group_name,
-                self.channel_layer
+                self.channel_name
             )
         await self.send_json(
             {
                 'action': ACTION_RECONNECT
             }
         )
+        print("AFTER")
 
     async def complete_challenge(self, label):
         room = await self.get_room(label)
@@ -467,7 +469,7 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         room = await self.get_room(label)
         messages = await self.fetch_all_message(room)
         await  self.send_json(
-            return_value(ACTION_REFRESH_CHAT, label, "self", MSG_MESSAGE, messages)
+            return_value(ACTION_REFRESH_CHAT, label, self.user.username, MSG_MESSAGE, messages)
         )
 
     # helpers with interaction with db
@@ -485,7 +487,7 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         except Exception:  # doesnot exits
             raise Exception("RoomDoesnotExist")
 
-        user = User(self.user).userprofile
+        user = self.user.userprofile
         if room.size < room.users.count() and user not in room.users.all():
             # register user to this room and return room
             room.users.add(user)
@@ -503,7 +505,7 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         Message.objects.create(
             room=room,
             message=message,
-            user=self.user.profile
+            user=self.userprofile
         )
 
     @database_sync_to_async
@@ -519,13 +521,18 @@ class MultiChatConsumer(AsyncJsonWebsocketConsumer):
         messages = MessageSerializers(messages, many=True)
         return messages.data
 
+    def convertt(self,dic):
+        dic["user"] = User.objects.get(id=dic["user"]).username
+        return dic
+    
     @database_sync_to_async
     def fetch_all_message(self, room):
         # for recycler viewer
         messages = room.messages.order_by('-created')
-        messages = MessageSerializers(messages, many=True)
-        return messages.data
-
+        messages = MessageSerializers(messages, many=True).data
+        messages = list(map(self.convertt,messages))
+        return messages
+    
     @database_sync_to_async
     def reconnect(self):
         return self.userprofile.rooms.all()
