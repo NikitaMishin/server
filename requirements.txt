@@ -40,7 +40,7 @@ setuptools==39.0.1
 six==1.11.0   
 social-auth-app-django==2.1.0    
 social-auth-core==1.7.0    
-Twisted==17.9.0   
+Twisted==22.2.0   
 txaio==2.10.0   
 urllib3==1.22     
 virtualenv==15.2.0   
