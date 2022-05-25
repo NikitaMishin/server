@@ -29,7 +29,7 @@ Pillow==5.1.0
 pip==10.0.0
 post==1.0.1    
 public==1.0.1    
-PyJWT==1.6.1    
+PyJWT==2.4.0    
 python3-openid==3.1.0    
 pytz==2018.4   
 query-string==1.0.1    
